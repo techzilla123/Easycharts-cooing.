@@ -107,12 +107,16 @@ export const UI = () => {
 const [deliveryType, setDeliveryType] = useState(""); // pickup | shipping
 const [shippingAddress, setShippingAddress] = useState("");
 const SHIPPING_FEE = 2000;
-const amount =
+const baseAmount =
   copyType === "soft"
     ? 5000
     : copyType === "hard"
     ? 7000 + (deliveryType === "shipping" ? SHIPPING_FEE : 0)
     : 0;
+
+const PAYSTACK_FEE_PERCENT = 2.61111111 / 100;
+const feeAmount = Math.ceil(baseAmount * PAYSTACK_FEE_PERCENT);
+const amountWithFee = baseAmount + feeAmount;
 
 
   const [page, setPage] = useAtom(pageAtom);
@@ -369,7 +373,9 @@ const downloadBook = () => {
             >
               Ship
             </button>
+
           </div>
+          
 
           {deliveryType === "shipping" && (
             <>
@@ -388,12 +394,23 @@ const downloadBook = () => {
       )}
 
       {/* TOTAL */}
-      {amount > 0 && (
-        <div className="flex justify-between text-sm font-medium border-t pt-3 mb-4">
-          <span>Total</span>
-          <span>₦{amount.toLocaleString()}</span>
-        </div>
-      )}
+     
+{baseAmount > 0 && (
+  <div className="border-t pt-3 mb-4 space-y-1 text-sm font-medium">
+    <div className="flex justify-between">
+      <span>Subtotal</span>
+      <span>₦{baseAmount.toLocaleString()}</span>
+    </div>
+    <div className="flex justify-between">
+      <span>Bank Charges</span>
+      <span>₦{feeAmount.toLocaleString()}</span>
+    </div>
+    <div className="flex justify-between font-semibold">
+      <span>Total</span>
+      <span>₦{amountWithFee.toLocaleString()}</span>
+    </div>
+  </div>
+)}
 
       {/* ACTIONS */}
       <div className="flex gap-3">
@@ -428,7 +445,7 @@ const downloadBook = () => {
     setShowEmailModal(false);
     payWithPaystack({
       email: customerEmail,
-      amount,
+      amount: amountWithFee,
       copyType,         // ✅ pass copy type
       deliveryType,     // ✅ pass delivery type
       shippingAddress,  // ✅ pass shipping address
@@ -438,7 +455,8 @@ const downloadBook = () => {
     });
   }}
 >
-  Pay ₦{amount.toLocaleString()}
+ Pay ₦{amountWithFee.toLocaleString()}
+
 </button>
 
       </div>
